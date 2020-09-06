@@ -14,7 +14,6 @@ import java.util.List;
  */
 public interface ILockerService {
 
-    void registerLocker(HttpServletRequest request, LockerRegisterRequest registerRequest);
 
     List<LockerDTO> listLocker(ListLockerRequest request);
 }

@@ -1,7 +1,6 @@
 package com.edm.camera.activemq;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.edm.camera.commons.enums.ErrorCode;
 import com.edm.camera.commons.exception.BusinessException;
 import com.edm.camera.dto.FaceLogDataMQ;
@@ -42,7 +41,7 @@ public class MQConsumer {
     public void receiveQueue(String message) {
         log.info("人脸流水mq入口，信息为：{}", message);
         try {
-            FaceLogDataMQ dataDTO = JSONObject.parseObject(message, FaceLogDataMQ.class);
+            FaceLogDataMQ dataDTO = JSON.parseObject(message, FaceLogDataMQ.class);
             FaceLogMQ data = dataDTO.getInfo();
             Optional.ofNullable(data).orElseThrow(() -> new BusinessException(ErrorCode.FACE_LOG_INFO_EMPTY));
             FaceLogDataVO faceLogDataVO = new FaceLogDataVO();
@@ -63,13 +62,13 @@ public class MQConsumer {
                 }
                 String lockerId = lockerIdO.toString();
                 Object md5O = redisUtils.hget("locker:" + lockerId, "md5");
+                String ip = redisUtils.hget("locker:" + lockerId, "ip").toString();
                 if (md5O == null) {
-                    log.error("锁已经掉线");
+                    log.error("锁已经掉线ip为:{},id为:{}", ip, lockerId);
                     throw new BusinessException(ErrorCode.LOCKER_OFF_LINE);
                 }
                 String md5 = md5O.toString();
                 String lockMessage = "{\"ser\":\"0\",\"instruction\":\"open\"}";
-                String ip = redisUtils.hget("locker:" + lockerId, "ip").toString();
                 log.info("发送给ip为:{},id为:{},信息为:{}", ip, lockerId, lockMessage);
                 channelMap.get(Integer.parseInt(md5)).writeAndFlush(lockMessage.getBytes());
             } else {
@@ -88,7 +87,7 @@ public class MQConsumer {
 
     @JmsListener(destination = "queue-1", containerFactory = "queueListenerContainerFactory")
     public void receiveQueue1(String message) {
-        System.out.println(message);
+        log.info(message);
     }
 
 }

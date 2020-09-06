@@ -2,15 +2,12 @@ package com.edm.camera.service.impl;
 
 import com.edm.camera.dto.LockerDTO;
 import com.edm.camera.request.ListLockerRequest;
-import com.edm.camera.request.LockerRegisterRequest;
 import com.edm.camera.service.ILockerService;
-import com.edm.camera.utils.IpUtils;
 import com.edm.camera.utils.RedisUtils;
 import com.edm.camera.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -27,12 +24,6 @@ public class LockerServiceImpl implements ILockerService {
     private RedisUtils redisUtils;
 
 
-    @Override
-    synchronized public void registerLocker(HttpServletRequest request, LockerRegisterRequest registerRequest) {
-        String ipAddr = IpUtils.getIpAddr(request);
-        redisUtils.hset("locker:" + registerRequest.getUniCode(), "status", registerRequest.getStatus(), 30);
-        redisUtils.hset("locker:" + registerRequest.getUniCode(), "ip", ipAddr, 30);
-    }
 
     @Override
     public List<LockerDTO> listLocker(ListLockerRequest request) {
@@ -45,13 +36,15 @@ public class LockerServiceImpl implements ILockerService {
         if (StringUtils.isNotEmpty(requestIp)) {
             keys = keys.stream().filter(v->requestIp.equals(v.split(":")[1])).collect(Collectors.toSet());
         }
+        String keyD=null;
         for (String key : keys) {
             String id = key.split(":")[1];
             LockerDTO dto =new LockerDTO();
-            dto.setIp((String)redisUtils.hget("locker:"+id, "ip"));
-            dto.setElectricity((String)redisUtils.hget("locker:"+id, "electricity"));
-            dto.setLockStatus((String)redisUtils.hget("locker:"+id, "lockStatus"));
-            dto.setDoorStatus((String)redisUtils.hget("locker:"+id, "doorStatus"));
+            keyD="locker:"+id;
+            dto.setIp((String)redisUtils.hget(keyD, "ip"));
+            dto.setElectricity((String)redisUtils.hget(keyD, "electricity"));
+            dto.setLockStatus((String)redisUtils.hget(keyD, "lockStatus"));
+            dto.setDoorStatus((String)redisUtils.hget(keyD, "doorStatus"));
             list.add(dto);
         }
         if (StringUtils.isNotEmpty(requestDoorStatus)) {
