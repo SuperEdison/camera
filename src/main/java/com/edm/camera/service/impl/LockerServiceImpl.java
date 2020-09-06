@@ -46,12 +46,12 @@ public class LockerServiceImpl implements ILockerService {
             keys = keys.stream().filter(v->requestIp.equals(v.split(":")[1])).collect(Collectors.toSet());
         }
         for (String key : keys) {
-            String localIP = key.split(":")[1];
+            String id = key.split(":")[1];
             LockerDTO dto =new LockerDTO();
-            dto.setIp(localIP);
-            dto.setElectricity((String)redisUtils.hget("locker:"+localIP, "electricity"));
-            dto.setLockStatus((String)redisUtils.hget("locker:"+localIP, "lockStatus"));
-            dto.setDoorStatus((String)redisUtils.hget("locker:"+localIP, "doorStatus"));
+            dto.setIp((String)redisUtils.hget("locker:"+id, "ip"));
+            dto.setElectricity((String)redisUtils.hget("locker:"+id, "electricity"));
+            dto.setLockStatus((String)redisUtils.hget("locker:"+id, "lockStatus"));
+            dto.setDoorStatus((String)redisUtils.hget("locker:"+id, "doorStatus"));
             list.add(dto);
         }
         if (StringUtils.isNotEmpty(requestDoorStatus)) {

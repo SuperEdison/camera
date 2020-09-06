@@ -77,18 +77,19 @@ public class TcpInboundHandler extends SimpleChannelInboundHandler<byte[]> {
         Channel channel = ctx.channel();
         String message = new String(msg);
         String md5 = String.valueOf(channel.hashCode());
-        log.info("来自设备md5为:{}的信息", channel.hashCode());
-        log.info("开始JSON解析锁传来的信息,并且延迟监听器");
         LockerRequest lockerRequest = JSONObject.parseObject(message, LockerRequest.class);
         int id = Integer.parseInt(lockerRequest.getId());
         if (!channelMap.containsKey(id)) {
             channelMap.put(id, channel);
         }
+        String ip = tcpServerNetty.getChannelUrl(ctx);
+        log.info("来自设备ip为:{},md5为:{} id為{}的信息",ip, channel.hashCode(),id);
+        log.info("开始JSON解析锁传来的信息,并且延迟监听器");
         redisUtils.hset("locker:" + id, "bluetooth", lockerRequest.getBluetooth());
         redisUtils.hset("locker:" + id, "doorStatus", lockerRequest.getDoorStatus());
         redisUtils.hset("locker:" + id, "lockStatus", lockerRequest.getLockStatus());
         redisUtils.hset("locker:" + id, "electricity", lockerRequest.getElectricity());
-        redisUtils.hset("locker:" + id, "ip", tcpServerNetty.getChannelUrl(ctx));
+        redisUtils.hset("locker:" + id, "ip", ip);
         redisUtils.hset("locker:" + id, "serial", 0);
         redisUtils.hset("locker:" + id, "md5", md5);
         redisUtils.expire("locker:" + id, 15);

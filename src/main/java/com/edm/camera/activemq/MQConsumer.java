@@ -13,7 +13,6 @@ import com.edm.camera.utils.RedisUtils;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -38,8 +37,7 @@ public class MQConsumer {
     private Map<Integer, Channel> channelMap;
     @Autowired
     private RedisUtils redisUtils;
-    @Value("${camera.list}")
-    private String cameraBind;
+
     @JmsListener(destination = "mq.bfms.client.msg.topic", containerFactory = "topicListenerContainerFactory")
     public void receiveQueue(String message) {
         log.info("人脸流水mq入口，信息为：{}", message);
@@ -58,18 +56,21 @@ public class MQConsumer {
                 faceLogDataVO.setSimilarity(similarFaces.get(0).getSimilarity());
                 faceLogDataVO.setLockerStatus("开锁");
                 faceLogDataVO.setFaceLibraryPic(similarFaces.get(0).getFaceImageUrl());
-                Object lockerIdO = redisUtils.get("locker:" + data.getChannelId());
-                if (lockerIdO==null) {
+                Object lockerIdO = redisUtils.get("camera:" + data.getChannelId());
+                if (lockerIdO == null) {
+                    log.error("摄像头没有绑定");
                     throw new BusinessException(ErrorCode.CAMERA_NO_BIND_LOCK);
                 }
                 String lockerId = lockerIdO.toString();
                 Object md5O = redisUtils.hget("locker:" + lockerId, "md5");
-                if (md5O==null) {
+                if (md5O == null) {
+                    log.error("锁已经掉线");
                     throw new BusinessException(ErrorCode.LOCKER_OFF_LINE);
                 }
                 String md5 = md5O.toString();
                 String lockMessage = "{\"ser\":\"0\",\"instruction\":\"open\"}";
-                log.info("发送的信息为:{}", lockMessage);
+                String ip = redisUtils.hget("locker:" + lockerId, "ip").toString();
+                log.info("发送给ip为:{},id为:{},信息为:{}", ip, lockerId, lockMessage);
                 channelMap.get(Integer.parseInt(md5)).writeAndFlush(lockMessage.getBytes());
             } else {
                 faceLogDataVO.setLockerStatus("不开锁");
@@ -78,6 +79,8 @@ public class MQConsumer {
             messagingTemplate.convertAndSend("/topic/faceLogStream", JSON.toJSONString(faceLogDataVO));
             //保存信息
             scanFaceLogService.saveFaceLogData(data);
+        } catch (BusinessException e) {
+            log.error("业务错误", e);
         } catch (Exception e) {
             log.error("MQ错误", e);
         }

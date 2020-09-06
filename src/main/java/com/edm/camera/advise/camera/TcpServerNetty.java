@@ -64,7 +64,7 @@ public class TcpServerNetty implements InitializingBean, DisposableBean {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         socketChannel.pipeline().addLast("bytesDecoder", new ByteArrayDecoder());
                         socketChannel.pipeline().addLast("bytesEncoder", new ByteArrayEncoder());
-                        socketChannel.pipeline().addLast(new IdleStateHandler(0,0,10), tcpInboundHandler);
+                        socketChannel.pipeline().addLast(new IdleStateHandler(0,0,20), tcpInboundHandler);
                         socketChannel.pipeline().addLast(tcpOutboundHandler);
                     }
                 });
