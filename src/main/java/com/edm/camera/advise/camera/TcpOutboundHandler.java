@@ -15,8 +15,6 @@ import org.springframework.stereotype.Component;
 public class TcpOutboundHandler extends ChannelOutboundHandlerAdapter {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        ctx.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
-            log.info("下发信息成功");
-        });
+        ctx.writeAndFlush(msg).addListener( future -> log.info("下发信息成功"));
     }
 }

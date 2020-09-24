@@ -38,6 +38,7 @@ public class TcpServerNetty implements InitializingBean, DisposableBean {
     private TcpOutboundHandler tcpOutboundHandler;
     @Value("${tcp.port}")
     private int tcpPort;
+    private static final String HOST = "0.0.0.0";
     @Bean
     public ServerBootstrap serverBootstrap() {
         return new ServerBootstrap();
@@ -68,7 +69,7 @@ public class TcpServerNetty implements InitializingBean, DisposableBean {
                         socketChannel.pipeline().addLast(tcpOutboundHandler);
                     }
                 });
-        ChannelFuture tcp = serverBootstrap.bind(tcpPort).sync();
+        ChannelFuture tcp = serverBootstrap.bind(HOST, tcpPort).sync();
         if (tcp.isSuccess()) {
             log.info("==============Tcp Netty Service启动成功==============端口号为：{}", tcpPort);
         }

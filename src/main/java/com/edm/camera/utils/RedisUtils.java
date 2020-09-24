@@ -1,13 +1,12 @@
 package com.edm.camera.utils;
 
+import com.edm.camera.commons.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -136,7 +135,7 @@ public class RedisUtils {
      */
     public long incr(String key, long delta){
         if(delta<0){
-            throw new RuntimeException("递增因子必须大于0");
+            throw new BusinessException("递增因子必须大于0");
         }
         return redisTemplate.opsForValue().increment(key, delta);
     }
@@ -149,7 +148,7 @@ public class RedisUtils {
      */
     public long decr(String key, long delta){
         if(delta<0){
-            throw new RuntimeException("递减因子必须大于0");
+            throw new BusinessException("递减因子必须大于0");
         }
         return redisTemplate.opsForValue().increment(key, -delta);
     }
@@ -311,7 +310,7 @@ public class RedisUtils {
             return redisTemplate.opsForSet().members(key);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new HashSet<>();
         }
     }
 
@@ -387,8 +386,7 @@ public class RedisUtils {
      */
     public long setRemove(String key, Object ...values) {
         try {
-            Long count = redisTemplate.opsForSet().remove(key, values);
-            return count;
+            return redisTemplate.opsForSet().remove(key, values);
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
@@ -408,7 +406,7 @@ public class RedisUtils {
             return redisTemplate.opsForList().range(key, start, end);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new ArrayList<>();
         }
     }
 
@@ -539,8 +537,7 @@ public class RedisUtils {
      */
     public long lRemove(String key,long count,Object value) {
         try {
-            Long remove = redisTemplate.opsForList().remove(key, count, value);
-            return remove;
+            return redisTemplate.opsForList().remove(key, count, value);
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
@@ -549,11 +546,10 @@ public class RedisUtils {
 
     public Set<String> keys(String like) {
         try {
-            Set<String> keys = redisTemplate.keys(like);
-            return keys;
+            return redisTemplate.keys(like);
         }catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new HashSet<>();
         }
     }
 }

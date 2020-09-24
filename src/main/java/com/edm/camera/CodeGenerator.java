@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
 import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
 import com.edm.camera.commons.entity.BaseEntity;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +21,13 @@ import java.util.Scanner;
  * @create 2020-06-17 22:39
  * @email edisonmiao@icloud.com
  */
+@Slf4j
 public class CodeGenerator {
     public static String scanner(String tip) {
         Scanner scanner = new Scanner(System.in);
         StringBuilder help = new StringBuilder();
         help.append("请输入" + tip + "：");
-        System.out.println(help.toString());
+        log.info(help.toString());
         if (scanner.hasNext()) {
             String ipt = scanner.next();
             if (StringUtils.isNotEmpty(ipt)) {
@@ -73,7 +75,6 @@ public class CodeGenerator {
         // 如果模板引擎是 freemarker
         String templatePath = "/templates/mapper.xml.ftl";
         // 如果模板引擎是 velocity
-//         String templatePath = "/templates/dao.xml.vm";
 
         // 自定义输出配置
         List<FileOutConfig> focList = new ArrayList<>();
@@ -86,16 +87,7 @@ public class CodeGenerator {
             }
 
         });
-        /*
-        cfg.setFileCreate(new IFileCreate() {
-            @Override
-            public boolean isCreate(ConfigBuilder configBuilder, FileType fileType, String filePath) {
-                // 判断自定义文件夹是否需要创建
-                checkDir("调用默认方法创建的目录");
-                return false;
-            }
-        });
-        */
+
         cfg.setFileOutConfigList(focList);
         mpg.setCfg(cfg);
 

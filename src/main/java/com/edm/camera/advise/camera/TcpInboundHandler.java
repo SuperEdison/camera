@@ -1,6 +1,6 @@
 package com.edm.camera.advise.camera;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSON;
 import com.edm.camera.dto.LockerRequest;
 import com.edm.camera.utils.RedisUtils;
 import io.netty.channel.Channel;
@@ -31,6 +31,7 @@ public class TcpInboundHandler extends SimpleChannelInboundHandler<byte[]> {
     private Map<Integer, Channel> channelMap;
     @Autowired
     private TcpServerNetty tcpServerNetty;
+    private static final String LOCK_PREFIX = "locker:";
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
@@ -77,7 +78,7 @@ public class TcpInboundHandler extends SimpleChannelInboundHandler<byte[]> {
         Channel channel = ctx.channel();
         String message = new String(msg);
         String md5 = String.valueOf(channel.hashCode());
-        LockerRequest lockerRequest = JSONObject.parseObject(message, LockerRequest.class);
+        LockerRequest lockerRequest = JSON.parseObject(message, LockerRequest.class);
         int id = Integer.parseInt(lockerRequest.getId());
         if (!channelMap.containsKey(id)) {
             channelMap.put(id, channel);
@@ -85,14 +86,14 @@ public class TcpInboundHandler extends SimpleChannelInboundHandler<byte[]> {
         String ip = tcpServerNetty.getChannelUrl(ctx);
         log.info("来自设备ip为:{},md5为:{} id為{}的信息",ip, channel.hashCode(),id);
         log.info("开始JSON解析锁传来的信息,并且延迟监听器");
-        redisUtils.hset("locker:" + id, "bluetooth", lockerRequest.getBluetooth());
-        redisUtils.hset("locker:" + id, "doorStatus", lockerRequest.getDoorStatus());
-        redisUtils.hset("locker:" + id, "lockStatus", lockerRequest.getLockStatus());
-        redisUtils.hset("locker:" + id, "electricity", lockerRequest.getElectricity());
-        redisUtils.hset("locker:" + id, "ip", ip);
-        redisUtils.hset("locker:" + id, "serial", 0);
-        redisUtils.hset("locker:" + id, "md5", md5);
-        redisUtils.expire("locker:" + id, 15);
+        redisUtils.hset(LOCK_PREFIX + id, "bluetooth", lockerRequest.getBluetooth());
+        redisUtils.hset(LOCK_PREFIX + id, "doorStatus", lockerRequest.getDoorStatus());
+        redisUtils.hset(LOCK_PREFIX + id, "lockStatus", lockerRequest.getLockStatus());
+        redisUtils.hset(LOCK_PREFIX + id, "electricity", lockerRequest.getElectricity());
+        redisUtils.hset(LOCK_PREFIX + id, "ip", ip);
+        redisUtils.hset(LOCK_PREFIX + id, "serial", 0);
+        redisUtils.hset(LOCK_PREFIX + id, "md5", md5);
+        redisUtils.expire(LOCK_PREFIX + id, 15);
         ctx.channel().writeAndFlush(("{\"code\":\"0\",\"ser\":\"" + lockerRequest.getSerial() + "\"}").getBytes());
     }
 

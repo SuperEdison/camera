@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -57,7 +58,7 @@ public class ActiveMQConfig {
         return activeMQConnectionFactory;
     }
     @Bean(name="topicListenerContainerFactory")
-    public JmsListenerContainerFactory<?> topicListenerContainerFactory(ConnectionFactory connectionFactory){
+    public JmsListenerContainerFactory<DefaultMessageListenerContainer> topicListenerContainerFactory(ConnectionFactory connectionFactory){
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setPubSubDomain(mqDomain.equals("true"));
@@ -65,7 +66,7 @@ public class ActiveMQConfig {
     }
 
     @Bean(name="queueListenerContainerFactory")
-    public JmsListenerContainerFactory<?> queueListenerContainerFactory(ConnectionFactory connectionFactory){
+    public JmsListenerContainerFactory<DefaultMessageListenerContainer> queueListenerContainerFactory(ConnectionFactory connectionFactory){
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setPubSubDomain(mqDomain.equals("false"));

@@ -2,6 +2,7 @@ package com.edm.camera.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.edm.camera.dto.FaceLogDataMQ;
+import com.edm.camera.dto.LockerDTO;
 import com.edm.camera.request.ListLockerRequest;
 import com.edm.camera.response.ApiResult;
 import com.edm.camera.service.ILockerService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.jms.Destination;
+import java.util.List;
 
 /**
  * @author Edm
@@ -29,12 +31,12 @@ public class LockerController {
     @Autowired
     private Destination topic;
     @PostMapping("/listLocker")
-    public ApiResult listLocker(ListLockerRequest request) {
+    public ApiResult<List<LockerDTO>> listLocker(ListLockerRequest request) {
         return ApiResult.ok(lockerService.listLocker(request));
     }
 
     @PostMapping("/test")
-    public ApiResult test(@RequestBody FaceLogDataMQ mq) {
+    public ApiResult<String> test(@RequestBody FaceLogDataMQ mq) {
         jmsTemplate.convertAndSend(topic, JSON.toJSONString(mq));
         return ApiResult.ok();
     }
