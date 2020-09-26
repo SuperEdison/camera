@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author Edm
@@ -43,7 +42,11 @@ public class MQConsumer {
         try {
             FaceLogDataMQ dataDTO = JSON.parseObject(message, FaceLogDataMQ.class);
             FaceLogMQ data = dataDTO.getInfo();
-            Optional.ofNullable(data).orElseThrow(() -> new BusinessException(ErrorCode.FACE_LOG_INFO_EMPTY));
+            if (data == null) {
+                throw new BusinessException(ErrorCode.FACE_LOG_INFO_EMPTY);
+            }
+            //保存信息
+            scanFaceLogService.saveFaceLogData(data);
             FaceLogDataVO faceLogDataVO = new FaceLogDataVO();
             faceLogDataVO.setScenePic(data.getPictureUrl());
             faceLogDataVO.setFacePic(data.getFaceImageUrl());
@@ -62,9 +65,9 @@ public class MQConsumer {
                 }
                 String lockerId = lockerIdO.toString();
                 Object md5O = redisUtils.hget("locker:" + lockerId, "md5");
-                String ip = redisUtils.hget("locker:" + lockerId, "ip").toString();
+                Object ip = redisUtils.hget("locker:" + lockerId, "ip");
                 if (md5O == null) {
-                    log.error("锁已经掉线ip为:{},id为:{}", ip, lockerId);
+                    log.error("id为：{}的锁已经掉线", lockerId);
                     throw new BusinessException(ErrorCode.LOCKER_OFF_LINE);
                 }
                 String md5 = md5O.toString();
@@ -76,10 +79,8 @@ public class MQConsumer {
                 faceLogDataVO.setIsBlack(0);
             }
             messagingTemplate.convertAndSend("/topic/faceLogStream", JSON.toJSONString(faceLogDataVO));
-            //保存信息
-            scanFaceLogService.saveFaceLogData(data);
         } catch (BusinessException e) {
-            log.error("业务错误", e);
+            log.error("业务错误：", e);
         } catch (Exception e) {
             log.error("MQ错误", e);
         }
